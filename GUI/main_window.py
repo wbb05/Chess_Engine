@@ -3,6 +3,15 @@
 from tkinter import *
 from tkinter import ttk
 from math import floor
+from enum import Enum
+
+# Player enum
+# TODO: For now, GUI doesn't handle turns
+class Player(Enum):
+    NONE = 0
+    WHITE = 1
+    BLACK = 2
+    
 
 class MainWindow:
     def __init__(self, root: Tk):
@@ -19,6 +28,16 @@ class MainWindow:
         mainframe.rowconfigure(0, weight= 1)
         mainframe.columnconfigure(0, weight=1)
 
+        # Create chessboard
+        self.init_canvas(mainframe)
+
+        self.init_player_fsm()
+
+        # Bind button click on canvas to selected in region
+        self.canvas.bind("<ButtonPress-1>", self.cell_selected)
+
+    # Creates chessboard
+    def init_canvas(self, mainframe):
         # Chess table
         # Canvas
         self.canvas_width = 500
@@ -46,15 +65,20 @@ class MainWindow:
         offset = self.canvas_width / self.board_cols / 2 # Should be same for rows and cols
         x = offset
         y = offset
-        for row in chess_pieces:
+        for row_i,row in enumerate(chess_pieces):
             for piece in row:
                 # Color square
                 if not color_square: self.canvas.create_rectangle(x - offset, y - offset, x + offset, y + offset, fill= "green")
                 color_square = not color_square
 
                 # Place chess piece
+                # Also store text id and type of piece
                 text_id = self.canvas.create_text(x, y, text= piece, font= ("Arial", 30))
-                self.canvas_text[(x,y)] = text_id
+
+                if row_i < 2: player = Player.BLACK
+                elif row_i > 5: player = Player.WHITE
+                else: player = Player.NONE
+                self.canvas_text[(x,y)] = (text_id, player)
 
                 x += self.canvas_width / self.board_cols
                 
@@ -62,18 +86,50 @@ class MainWindow:
             x = offset
             color_square = not color_square
 
-        # TODO: Bind button click on canvas to selected in region
-        # canvas.find_overlapping
-        # canvas.bind
-        self.canvas.bind("<ButtonPress-1>", self.cell_selected)
+    # Starts game FSM, where players take turns
+    def init_player_fsm(self):
+        self.is_piece_selected = False # Whether player is actively moving a piece
+        self.piece_selected_pos = (0,0) # Selected piece
 
     def cell_selected(self, event):
         # Find text location from event location
         offset = self.canvas_width / self.board_cols
         text_x = floor(event.x / offset) * (offset) + offset/2
         text_y = floor(event.y / offset) * (offset) + offset/2
-        # DEBUG
-        text_id = self.canvas_text[(text_x, text_y)]
-        self.canvas.itemconfigure(text_id, text= "<")
+
+        # Call FSM to determine action
+        self.player_move(text_x, text_y)
+
+        
+    def player_move(self, x, y):
+        # Find text at location
+        text_id, player = self.canvas_text[(x, y)]
+
+        # If actively moving, move there
+        if self.is_piece_selected:
+
+            # Find old piece info
+            old_text_id, old_player = self.canvas_text[self.piece_selected_pos]
+            piece = self.canvas.itemcget(old_text_id, 'text')
+
+            # Remove from old pos
+            self.canvas.itemconfigure(old_text_id, text= "")
+            self.canvas_text[self.piece_selected_pos] = (old_text_id, Player.NONE)
+
+            # Add to new pos
+            self.canvas.itemconfigure(text_id, text= piece)
+            self.canvas_text[(x,y)] = (text_id, old_player)
+
+            # Reset for next move
+            self.is_piece_selected = False
+
+        # Else if not actively moving, choose selected piece
+        elif not self.is_piece_selected and player != Player.NONE:
+            self.piece_selected_pos = (x,y)
+            self.is_piece_selected = True
+
+        # Else, invalid move, no action taken
+        
+        
 
         
