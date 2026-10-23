@@ -18,7 +18,7 @@ Game:
 Need states, possible actions, resulting state from actions, reward of taking action from s to s'
 
 Chess Engine:
-Start MCTS, maybe do RL
+Start MCTS, prob need to do RL
 
 """
 from tkinter import Tk

@@ -2,6 +2,7 @@
 # Also used to handle events from widgets, etc.
 from tkinter import *
 from tkinter import ttk
+from math import floor
 
 class MainWindow:
     def __init__(self, root: Tk):
@@ -20,11 +21,11 @@ class MainWindow:
 
         # Chess table
         # Canvas
-        canvas_width = 500
-        canvas_height = 500
+        self.canvas_width = 500
+        self.canvas_height = 500
         self.board_rows = 8
         self.board_cols = 8
-        self.canvas = Canvas(mainframe, width=canvas_width, height=canvas_height, bg="white")
+        self.canvas = Canvas(mainframe, width=self.canvas_width, height=self.canvas_height, bg="white")
         self.canvas.grid(column= 0, row = 0, columnspan= 8, sticky = (N, W, E, S))
 
         # Add chess pieces and color squares
@@ -39,10 +40,10 @@ class MainWindow:
             ("\u2656", "\u2658", "\u2657", "\u2655", "\u2654", "\u2657", "\u2658", "\u2656")
         ]
 
+        # Dict mapping location to text at that location
+        self.canvas_text = {}
         color_square = False
-
-
-        offset = canvas_width / self.board_cols / 2 # Should be same for rows and cols
+        offset = self.canvas_width / self.board_cols / 2 # Should be same for rows and cols
         x = offset
         y = offset
         for row in chess_pieces:
@@ -52,13 +53,27 @@ class MainWindow:
                 color_square = not color_square
 
                 # Place chess piece
-                self.canvas.create_text(x, y, text= piece, font= ("Arial", 30))
+                text_id = self.canvas.create_text(x, y, text= piece, font= ("Arial", 30))
+                self.canvas_text[(x,y)] = text_id
 
-                x += canvas_width / self.board_cols
-                print(color_square, x, y) # DEBUG
+                x += self.canvas_width / self.board_cols
                 
-            y += canvas_height / self.board_rows
+            y += self.canvas_height / self.board_rows
             x = offset
             color_square = not color_square
+
+        # TODO: Bind button click on canvas to selected in region
+        # canvas.find_overlapping
+        # canvas.bind
+        self.canvas.bind("<ButtonPress-1>", self.cell_selected)
+
+    def cell_selected(self, event):
+        # Find text location from event location
+        offset = self.canvas_width / self.board_cols
+        text_x = floor(event.x / offset) * (offset) + offset/2
+        text_y = floor(event.y / offset) * (offset) + offset/2
+        # DEBUG
+        text_id = self.canvas_text[(text_x, text_y)]
+        self.canvas.itemconfigure(text_id, text= "<")
 
         
