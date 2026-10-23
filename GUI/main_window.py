@@ -113,11 +113,11 @@ class MainWindow:
             piece = self.canvas.itemcget(old_text_id, 'text')
 
             # Remove from old pos
-            self.canvas.itemconfigure(old_text_id, text= "")
+            self.canvas.itemconfigure(old_text_id, text= "", fill= "black")
             self.canvas_text[self.piece_selected_pos] = (old_text_id, Player.NONE)
 
             # Add to new pos
-            self.canvas.itemconfigure(text_id, text= piece)
+            self.canvas.itemconfigure(text_id, text= piece, fill= "black")
             self.canvas_text[(x,y)] = (text_id, old_player)
 
             # Reset for next move
@@ -126,11 +126,15 @@ class MainWindow:
         # If piece chosen but selected to same position, don't move and deselect
         elif self.is_piece_selected and (x,y) == self.piece_selected_pos:
             self.is_piece_selected = False
+            self.canvas.itemconfigure(text_id, fill="black")
 
         # Else if not actively moving, choose selected piece
         elif not self.is_piece_selected and player != Player.NONE:
             self.piece_selected_pos = (x,y)
             self.is_piece_selected = True
+
+            # Visually select piece
+            self.canvas.itemconfigure(text_id, fill="lightblue")
         
 
         # Else, invalid move, no action taken
