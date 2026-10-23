@@ -105,8 +105,8 @@ class MainWindow:
         # Find text at location
         text_id, player = self.canvas_text[(x, y)]
 
-        # If actively moving, move there
-        if self.is_piece_selected:
+        # If piece chosen, move to selected position if empty
+        if self.is_piece_selected and (x,y) != self.piece_selected_pos:
 
             # Find old piece info
             old_text_id, old_player = self.canvas_text[self.piece_selected_pos]
@@ -123,10 +123,15 @@ class MainWindow:
             # Reset for next move
             self.is_piece_selected = False
 
+        # If piece chosen but selected to same position, don't move and deselect
+        elif self.is_piece_selected and (x,y) == self.piece_selected_pos:
+            self.is_piece_selected = False
+
         # Else if not actively moving, choose selected piece
         elif not self.is_piece_selected and player != Player.NONE:
             self.piece_selected_pos = (x,y)
             self.is_piece_selected = True
+        
 
         # Else, invalid move, no action taken
         
